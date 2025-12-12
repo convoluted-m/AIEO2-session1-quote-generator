@@ -1,0 +1,4 @@
+.env  # env variables
+.DS_STORE  # macOS system files
+*.code-workspace  # VSCode workspace file
+.vscode/  # VSCode settings
