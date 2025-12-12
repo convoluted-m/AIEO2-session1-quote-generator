@@ -201,7 +201,7 @@ export default function Home() {
         )}
 
         <footer className="text-center text-sm text-muted-foreground pt-8">
-          <p>May these words travel with you</p>
+          <p> 2025. Crafted by convoluted-m</p>
         </footer>
       </div>
     </main>
