@@ -166,8 +166,10 @@ export default function Home() {
   const shouldShowNoFavoritesMessage = favoritesOnly && favorites.length === 0
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
-      <div className="w-full max-w-4xl space-y-12">
+    <main className="relative min-h-screen flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden">
+      <div className="dust-page pointer-events-none absolute inset-0 z-0 opacity-30" aria-hidden />
+
+      <div className="relative z-10 w-full max-w-4xl space-y-12">
         <QuoteHeader
           category={category}
           onCategoryChange={handleCategoryChange}
@@ -200,8 +202,19 @@ export default function Home() {
           <p className="text-center text-muted-foreground">No quotes found for "{searchQuery}"</p>
         )}
 
-        <footer className="text-center text-sm text-muted-foreground pt-8">
+        <footer className="text-center text-sm text-muted-foreground pt-8 space-y-1">
           <p> 2025. Crafted by convoluted-m</p>
+          <p className="text-xs text-muted-foreground/70">
+            Image credit:{" "}
+            <a
+              href="https://easy-peasy.ai/ai-image-generator/images/light-emerging-from-books"
+              className="underline hover:text-foreground/80"
+              target="_blank"
+              rel="noreferrer"
+            >
+              “The Radiance of Knowledge: Light from Books” (Easy-Peasy.AI)
+            </a>
+          </p>
         </footer>
       </div>
     </main>
