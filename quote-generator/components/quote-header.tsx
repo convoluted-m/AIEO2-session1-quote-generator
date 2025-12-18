@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -29,15 +30,41 @@ export function QuoteHeader({
   favoriteCount,
 }: QuoteHeaderProps) {
   return (
-    <header className="w-full max-w-4xl mx-auto space-y-6">
+    <header className="w-full max-w-4xl mx-auto space-y-4">
       {/* Title */}
-      <div className="text-center space-y-2">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground text-balance"> Words of Radiance </h1>
-        <p className="text-lg text-muted-foreground">Poetry to light your way</p>
+      <div className="text-center space-y-1">
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading font-semibold text-foreground text-balance tracking-[0.05em]">
+          Words of Radiance
+        </h1>
+        <p className="font-serif text-lg text-muted-foreground">Poetry to light your way</p>
+      </div>
+
+      {/* Accent image between title and controls */}
+      <div className="flex justify-center">
+        <div
+          className="pointer-events-none opacity-85"
+          style={{
+            WebkitMaskImage:
+              "linear-gradient(90deg, transparent 0%, rgba(255,255,255,1) 6%, rgba(255,255,255,1) 94%, transparent 100%), linear-gradient(0deg, transparent 0%, rgba(255,255,255,1) 6%, rgba(255,255,255,1) 94%, transparent 100%)",
+            maskImage:
+              "linear-gradient(90deg, transparent 0%, rgba(255,255,255,1) 6%, rgba(255,255,255,1) 94%, transparent 100%), linear-gradient(0deg, transparent 0%, rgba(255,255,255,1) 6%, rgba(255,255,255,1) 94%, transparent 100%)",
+            WebkitMaskComposite: "destination-in",
+            maskComposite: "intersect",
+          }}
+        >
+          <Image
+            src="/book-mystic.png"
+            alt="Light spilling from an open book"
+            width={140}
+            height={140}
+            className="select-none drop-shadow-md saturate-[0.92] contrast-[0.96]"
+            priority={false}
+          />
+        </div>
       </div>
 
       {/* Controls */}
-      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center pt-2">
         {/* Category Select */}
         <Select value={category} onValueChange={onCategoryChange}>
           <SelectTrigger className="w-full md:w-48">

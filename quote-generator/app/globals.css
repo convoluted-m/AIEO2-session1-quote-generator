@@ -123,4 +123,38 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  .font-heading {
+    font-family: var(--font-heading), "Cinzel", serif;
+    letter-spacing: 0.04em;
+  }
+
+  .font-serif {
+    font-family: var(--font-serif), "Crimson Text", serif;
+  }
+}
+
+.dust-page {
+  background-image:
+    radial-gradient(1.6px 1.6px at 20% 30%, rgba(255, 230, 190, 0.45), transparent),
+    radial-gradient(1.4px 1.4px at 70% 60%, rgba(245, 210, 160, 0.4), transparent),
+    radial-gradient(1.2px 1.2px at 40% 80%, rgba(255, 240, 210, 0.35), transparent),
+    url("/dust.png");
+  background-size: 260px 260px, 320px 320px, 280px 280px, cover;
+  background-repeat: repeat, repeat, repeat, no-repeat;
+  background-position: center, center, center, center;
+  mix-blend-mode: screen;
+  animation: dust-page-drift 28s ease-in-out infinite alternate;
+  opacity: 0.22;
+}
+
+@keyframes dust-page-drift {
+  0% {
+    transform: translate3d(0px, 0px, 0);
+    opacity: 0.28;
+  }
+  100% {
+    transform: translate3d(-24px, 18px, 0);
+    opacity: 0.18;
+  }
 }

@@ -1,14 +1,20 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Crimson_Text } from "next/font/google"
+import { Geist, Crimson_Text, Cinzel } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
+const _cinzel = Cinzel({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-heading",
+})
 const _crimsonText = Crimson_Text({
   weight: ["400", "600"],
   style: ["normal", "italic"],
   subsets: ["latin"],
+  variable: "--font-serif",
 })
 
 export const metadata: Metadata = {
@@ -41,7 +47,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans antialiased`}>
+      <body className={`${_geist.className} ${_cinzel.variable} ${_crimsonText.variable} font-sans antialiased`}>
         {children}
         <Analytics />
       </body>
