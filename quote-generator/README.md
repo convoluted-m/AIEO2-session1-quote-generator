@@ -25,7 +25,7 @@ npm install
 
 ## Dev
 
-`npm run dev`  starts the dev server (runs on local host)
+`npm run dev`  starts the dev server (runs on local host); to test locally before pushing changes to prod
 `npm run build` to  test the production build (optionally `npm start` to serve the built app)
 
 ## Prod
@@ -35,3 +35,4 @@ npm install
 ## Notes
 
 - Quotes/categories/tags are defined in `lib/quotes.ts`; editing that file updates what the app renders.
+- The Next.js app lives in the `quote-generator/` subfolder; Vercel’s project root is set to that directory so builds run from there.
