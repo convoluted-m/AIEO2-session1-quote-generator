@@ -12,22 +12,35 @@ export default function Home() {
   const router = useRouter()
 
   const [currentQuote, setCurrentQuote] = useState<Quote | null>(null)
-  const [category, setCategory] = useState("All")
+  const [authorFilter, setAuthorFilter] = useState("All")
   const [favorites, setFavorites] = useState<number[]>([])
   const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isAnimating, setIsAnimating] = useState(false)
   const [searchResults, setSearchResults] = useState<Quote[] | null>(null)
+  const [theme, setTheme] = useState<"light" | "dark">("light")
 
   // Load favorites from localStorage
   useEffect(() => {
     const stored = localStorage.getItem("favoriteQuotes")
+    const storedAuthor = localStorage.getItem("authorFilter")
+    const storedFavOnly = localStorage.getItem("favoritesOnly")
+    const storedTheme = localStorage.getItem("theme")
     if (stored) {
       try {
         setFavorites(JSON.parse(stored))
       } catch (e) {
         console.error("Failed to load favorites", e)
       }
+    }
+    if (storedAuthor) {
+      setAuthorFilter(storedAuthor)
+    }
+    if (storedFavOnly) {
+      setFavoritesOnly(storedFavOnly === "true")
+    }
+    if (storedTheme === "dark") {
+      setTheme("dark")
     }
   }, [])
 
@@ -38,20 +51,40 @@ export default function Home() {
       const quote = getQuoteById(Number(quoteId))
       if (quote) {
         setCurrentQuote(quote)
-        setCategory(quote.category)
+        setAuthorFilter(quote.author)
         return
       }
     }
     // Load random quote if no valid ID in URL
     if (!currentQuote) {
-      setCurrentQuote(getRandomQuote())
+      setCurrentQuote(getRandomQuote(authorFilter))
     }
-  }, [searchParams])
+  }, [searchParams, authorFilter])
 
   // Save favorites to localStorage
   useEffect(() => {
     localStorage.setItem("favoriteQuotes", JSON.stringify(favorites))
   }, [favorites])
+
+  // Persist filters
+  useEffect(() => {
+    localStorage.setItem("authorFilter", authorFilter)
+  }, [authorFilter])
+
+  useEffect(() => {
+    localStorage.setItem("favoritesOnly", String(favoritesOnly))
+  }, [favoritesOnly])
+
+  // Persist theme and apply class
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === "dark") {
+      root.classList.add("dark")
+    } else {
+      root.classList.remove("dark")
+    }
+    localStorage.setItem("theme", theme)
+  }, [theme])
 
   const handleNewQuote = () => {
     setIsAnimating(true)
@@ -61,8 +94,14 @@ export default function Home() {
       if (favoritesOnly && favorites.length > 0) {
         // Pick random from favorites
         const favoriteQuotes = favorites.map((id) => getQuoteById(id)).filter((q): q is Quote => q !== undefined)
-        const filtered = favoriteQuotes.filter((q) => q.id !== currentQuote?.id)
-        const pool = filtered.length > 0 ? filtered : favoriteQuotes
+        const favoritesByAuthor =
+          authorFilter === "All" ? favoriteQuotes : favoriteQuotes.filter((q) => q.author === authorFilter)
+        const filtered = favoritesByAuthor.filter((q) => q.id !== currentQuote?.id)
+        const pool = filtered.length > 0 ? filtered : favoritesByAuthor
+        if (pool.length === 0) {
+          setIsAnimating(false)
+          return
+        }
         newQuote = pool[Math.floor(Math.random() * pool.length)]
       } else if (searchResults && searchResults.length > 0) {
         // Pick from search results
@@ -70,14 +109,18 @@ export default function Home() {
         const pool = filtered.length > 0 ? filtered : searchResults
         newQuote = pool[Math.floor(Math.random() * pool.length)]
       } else {
-        // Normal random based on category
-        newQuote = getRandomQuote(category, currentQuote?.id)
+        // Normal random, avoid repeating current if possible
+        newQuote = getRandomQuote(authorFilter, currentQuote?.id)
       }
 
       setCurrentQuote(newQuote)
       updateURL(newQuote.id)
       setIsAnimating(false)
     }, 300)
+  }
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"))
   }
 
   const handleToggleFavorite = (id: number) => {
@@ -91,26 +134,13 @@ export default function Home() {
     }
   }
 
-  const handleCategoryChange = (newCategory: string) => {
-    setCategory(newCategory)
-    setSearchQuery("")
-    setSearchResults(null)
-    setIsAnimating(true)
-    setTimeout(() => {
-      const newQuote = getRandomQuote(newCategory)
-      setCurrentQuote(newQuote)
-      updateURL(newQuote.id)
-      setIsAnimating(false)
-    }, 300)
-  }
-
   const handleSearch = () => {
     if (!searchQuery.trim()) {
       setSearchResults(null)
       return
     }
 
-    const results = searchQuotes(searchQuery)
+    const results = searchQuotes(searchQuery).filter((q) => authorFilter === "All" || q.author === authorFilter)
     setSearchResults(results)
 
     if (results.length > 0) {
@@ -124,6 +154,11 @@ export default function Home() {
     }
   }
 
+  const handleClearSearch = () => {
+    setSearchQuery("")
+    setSearchResults(null)
+  }
+
   const handleToggleFavoritesOnly = () => {
     const newValue = !favoritesOnly
     setFavoritesOnly(newValue)
@@ -134,9 +169,13 @@ export default function Home() {
       setIsAnimating(true)
       setTimeout(() => {
         const favoriteQuotes = favorites.map((id) => getQuoteById(id)).filter((q): q is Quote => q !== undefined)
-        const newQuote = favoriteQuotes[Math.floor(Math.random() * favoriteQuotes.length)]
-        setCurrentQuote(newQuote)
-        updateURL(newQuote.id)
+        const favoritesByAuthor =
+          authorFilter === "All" ? favoriteQuotes : favoriteQuotes.filter((q) => q.author === authorFilter)
+        if (favoritesByAuthor.length > 0) {
+          const newQuote = favoritesByAuthor[Math.floor(Math.random() * favoritesByAuthor.length)]
+          setCurrentQuote(newQuote)
+          updateURL(newQuote.id)
+        }
         setIsAnimating(false)
       }, 300)
     } else if (newValue && favorites.length === 0) {
@@ -145,12 +184,25 @@ export default function Home() {
       // Switching back to all quotes
       setIsAnimating(true)
       setTimeout(() => {
-        const newQuote = getRandomQuote(category)
+        const newQuote = getRandomQuote(authorFilter, currentQuote?.id)
         setCurrentQuote(newQuote)
         updateURL(newQuote.id)
         setIsAnimating(false)
       }, 300)
     }
+  }
+
+  const handleAuthorChange = (newAuthor: string) => {
+    setAuthorFilter(newAuthor)
+    setSearchQuery("")
+    setSearchResults(null)
+    setIsAnimating(true)
+    setTimeout(() => {
+      const newQuote = getRandomQuote(newAuthor)
+      setCurrentQuote(newQuote)
+      updateURL(newQuote.id)
+      setIsAnimating(false)
+    }, 200)
   }
 
   const updateURL = (quoteId: number) => {
@@ -159,27 +211,50 @@ export default function Home() {
     router.push(`?${params.toString()}`, { scroll: false })
   }
 
+  const handleResetFilters = () => {
+    setAuthorFilter("All")
+    setSearchQuery("")
+    setSearchResults(null)
+  }
+
   if (!currentQuote) {
     return null
   }
 
   const shouldShowNoFavoritesMessage = favoritesOnly && favorites.length === 0
+  const favoritesByAuthor =
+    authorFilter === "All" ? favorites : favorites.filter((id) => getQuoteById(id)?.author === authorFilter)
+  const shouldShowNoAuthorFavorites =
+    favoritesOnly && favorites.length > 0 && favoritesByAuthor.filter(Boolean).length === 0
+  const shouldShowNoSearchMessage = searchResults !== null && searchResults.length === 0
+  const displayAuthor = authorFilter === "All" ? "All authors" : authorFilter
 
   return (
     <main className="relative min-h-screen flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden">
-      <div className="dust-page pointer-events-none absolute inset-0 z-0 opacity-30" aria-hidden />
-
       <div className="relative z-10 w-full max-w-4xl space-y-12">
         <QuoteHeader
-          category={category}
-          onCategoryChange={handleCategoryChange}
+          author={authorFilter}
+          onAuthorChange={handleAuthorChange}
           favoritesOnly={favoritesOnly}
           onToggleFavoritesOnly={handleToggleFavoritesOnly}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onSearch={handleSearch}
+          onClearSearch={handleClearSearch}
+          onResetFilters={handleResetFilters}
           favoriteCount={favorites.length}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
         />
+
+        {shouldShowNoSearchMessage && (
+          <p className="text-center text-sm text-[#6b4a12]">No quotes found for “{searchQuery}”.</p>
+        )}
+        {shouldShowNoAuthorFavorites && (
+          <p className="text-center text-sm text-[#6b4a12]">
+            No favorites for {displayAuthor}. Try turning off Favorites or choosing another author.
+          </p>
+        )}
 
         {shouldShowNoFavoritesMessage ? (
           <div className="text-center py-16 space-y-4">
@@ -198,23 +273,8 @@ export default function Home() {
           />
         )}
 
-        {searchResults && searchResults.length === 0 && (
-          <p className="text-center text-muted-foreground">No quotes found for "{searchQuery}"</p>
-        )}
-
-        <footer className="text-center text-sm text-muted-foreground pt-8 space-y-1">
+        <footer className="text-center text-sm text-[#4a3821] pt-8">
           <p> 2025. Crafted by convoluted-m</p>
-          <p className="text-xs text-muted-foreground/70">
-            Image credit:{" "}
-            <a
-              href="https://easy-peasy.ai/ai-image-generator/images/light-emerging-from-books"
-              className="underline hover:text-foreground/80"
-              target="_blank"
-              rel="noreferrer"
-            >
-              “The Radiance of Knowledge: Light from Books” (Easy-Peasy.AI)
-            </a>
-          </p>
         </footer>
       </div>
     </main>
